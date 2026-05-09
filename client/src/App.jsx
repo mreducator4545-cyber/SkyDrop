@@ -19,20 +19,25 @@ function App() {
 
     try {
       setStatus('SkyDropping...');
-      const response = await fetch('https://sky-drop-liart.vercel.app/', {
+      // Added /upload to the end of your Vercel URL
+      const response = await fetch('https://vercel.app', {
         method: 'POST',
         body: formData,
       });
 
+      if (!response.ok) throw new Error('Upload failed');
+
       const data = await response.json();
-      const downloadUrl = `https://sky-drop-liart.vercel.app/download/${data.file}`;
+      // Points to your download route
+      const downloadUrl = `https://vercel.app{data.file}`;
       
       setStatus(
         <div className="bg-sky-500/20 p-3 rounded-lg border border-sky-500/50">
           <p className="text-sky-400 font-bold mb-1">✅ SkyDrop Ready!</p>
           <a 
             href={downloadUrl} 
-            download={file.name} 
+            target="_blank"
+            rel="noopener noreferrer"
             className="text-white underline hover:text-sky-300 transition-colors"
           >
             Download File
@@ -80,3 +85,4 @@ function App() {
 }
 
 export default App;
+
