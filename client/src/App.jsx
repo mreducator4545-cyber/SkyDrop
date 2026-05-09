@@ -19,13 +19,13 @@ function App() {
 
     try {
       setStatus('SkyDropping...');
-      const response = await fetch('http://localhost:5000/upload', {
+      const response = await fetch('https://sky-drop-liart.vercel.app/', {
         method: 'POST',
         body: formData,
       });
 
       const data = await response.json();
-      const downloadUrl = `http://localhost:5000/download/${data.file}`;
+      const downloadUrl = `https://sky-drop-liart.vercel.app/download/${data.file}`;
       
       setStatus(
         <div className="bg-sky-500/20 p-3 rounded-lg border border-sky-500/50">
