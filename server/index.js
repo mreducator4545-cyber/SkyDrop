@@ -3,23 +3,28 @@ const cors = require('cors');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
+const os = require('os'); // Needed for temp directory
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Create 'uploads' folder if it doesn't exist
-const uploadDir = './uploads';
-if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir);
+// Vercel uses a read-only filesystem. Use the system temp folder for uploads.
+const uploadDir = os.tmpdir(); 
 
 const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, 'uploads/'),
+  destination: (req, file, cb) => cb(null, uploadDir),
   filename: (req, file, cb) => {
     cb(null, Date.now() + '-' + file.originalname);
   }
 });
 
 const upload = multer({ storage });
+
+// Health check route for the home page
+app.get('/', (req, res) => {
+  res.send('SkyDrop Server is running!');
+});
 
 // Route to handle upload
 app.post('/upload', upload.single('file'), (req, res) => {
@@ -30,12 +35,15 @@ app.post('/upload', upload.single('file'), (req, res) => {
   });
 });
 
-// FORCED DOWNLOAD LOGIC: This makes the browser save the file
-app.use('/download', express.static(path.join(__dirname, 'uploads'), {
-  setHeaders: (res) => {
-    res.setHeader('Content-Disposition', 'attachment');
+// Route to handle downloads from the temp folder
+app.get('/download/:filename', (req, res) => {
+  const filePath = path.join(uploadDir, req.params.filename);
+  if (fs.existsSync(filePath)) {
+    res.download(filePath);
+  } else {
+    res.status(404).send('File not found or expired.');
   }
-}));
+});
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
